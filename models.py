@@ -20,10 +20,10 @@ class Employee(Base):
     usages = relationship("Usage", back_populates="employee")
 
     def __repr__(self):
-        return f"<Employee code: {self.code}>"
+        return f"Code: {self.code}"
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"Code: {self.code}"
 
 
 class Device(Base):
@@ -37,12 +37,10 @@ class Device(Base):
     usages = relationship("Usage", back_populates="device")
 
     def __repr__(self):
-        return f"<Device code: {self.code}>"
+        return f"Code: {self.code}"
 
     def __str__(self):
-        return (f"Description: {self.description}"
-                f"\nBrand: ({self.brand})"
-                f"\nType: ({self.type})")
+        return f"Code: {self.code}"
 
 
 class Usage(Base):

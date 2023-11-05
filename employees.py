@@ -83,6 +83,7 @@ class EmployeeScript(DatabaseConnection):
                 "email": employee.email,
                 "code": employee.code
             })
+        print("Employees list:")
         print(tabulate(data, **tabluate_kwargs))
 
     def add_employee(self):
@@ -158,7 +159,7 @@ class EmployeeScript(DatabaseConnection):
             return
 
         confirm = input("Are you sure you want to delete this employee? (yes/no): ").lower()
-        if confirm == 'yes':
+        if confirm in ['yes', 'y']:
             self.session.delete(employee)
             self.session.commit()
             print(f"Employee with code {employee_code} deleted.")

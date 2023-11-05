@@ -96,21 +96,21 @@ class DeviceScript(DatabaseConnection):
 
         while True:
             if check_brand:
-                input_brand = input(f"Enter new brand ({self.joined_brand_choices}): ").strip().lower()
+                input_brand = input(f"Enter follow new brand if you want to update ({self.joined_brand_choices}): ").strip().lower()
                 brand = get_type_by_name(name=input_brand, enum_class=BrandType)
                 if brand:
                     device_inst.brand = brand
-                else:
+                elif input_brand:
                     print("Invalid brand. Please enter one of the following: " + self.joined_brand_choices)
                     continue
                 check_brand = False
 
             if check_device:
-                input_device = input(f"Enter new device type ({self.joined_device_choices}): ").strip().lower()
+                input_device = input(f"Enter new device if you want to update ({self.joined_device_choices}): ").strip().lower()
                 device = get_type_by_name(name=input_device, enum_class=DeviceType)
                 if device:
                     device_inst.type = device
-                else:
+                elif input_device:
                     print("Invalid brand. Please enter one of the following: " + self.joined_device_choices)
                     continue
                 check_device = False
@@ -162,7 +162,7 @@ def main():
 
         es.commands[command]()
 
-        print(("\n" + "-" * slash).strip())
+        print("\n" + "-" * slash)
 
 
 if __name__ == "__main__":
