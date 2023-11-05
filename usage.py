@@ -9,7 +9,6 @@ from settings import tabluate_kwargs
 class EmployeeUsageScript(DatabaseConnection):
     def __init__(self):
         self.commands = {
-            "list": self.list,
             "all": self.all_usages,
             "in": self.all_check_in,
             "out": self.all_check_out,
