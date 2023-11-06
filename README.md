@@ -40,6 +40,28 @@ After creating the image and launching the container, the terminal will have acc
 
 ## Commands
 
+### To test eaiser there are scripts to add employees and devices, by defoult in database.db in repository already exist 5 devices.
+
+Commands to start working with a new database or create dummy employees or devices:
+
+**Create tables**
+
+```bash
+python db.py init
+```
+
+**Add default devices**
+
+```bash
+python db.py dummy_devices
+``` 
+
+**Add default employees**
+```bash
+python db.py dummy_employees
+```
+
+
 ### For `Employee`:
 
 **List all employees:**
