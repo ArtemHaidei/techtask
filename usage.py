@@ -1,12 +1,14 @@
 import sys
 from tabulate import tabulate
 from models import Employee, Device, Usage
-from db import DatabaseConnection
-from choiches import UsageCheck
+from db import DatabaseConnectionMixin
+from choices import UsageCheck
 from settings import tabluate_kwargs
 
 
-class EmployeeUsageScript(DatabaseConnection):
+class EmployeeUsageScript(DatabaseConnectionMixin):
+    """This class contains all the commands for managing usages table."""
+
     def __init__(self):
         self.commands = {
             "all": self.all_usages,
@@ -20,7 +22,15 @@ class EmployeeUsageScript(DatabaseConnection):
         self.session = None
 
     def get_usages_with_device_info(self, search_type=None):
-        """Get query usages with device info."""
+        """
+            Get query usages with device info.
+
+            Args:
+                search_type (str | none): The type of usage to search for.
+
+            Returns:
+                query: Returns query with usages and device info.
+        """
         query = self.session.query(
             Usage.date,
             Usage.type,
@@ -51,7 +61,7 @@ class EmployeeUsageScript(DatabaseConnection):
                     chek_employee = False
                     continue
 
-                print(f"Employee with code: {employee_code} - not found!")
+                print(f"Employee {employee_code} - not found!")
                 continue
 
             device_code = input("Enter device code: ").strip()
@@ -61,7 +71,7 @@ class EmployeeUsageScript(DatabaseConnection):
 
             device = self.session.query(Device).filter(Device.code == device_code).first()
             if device is None:
-                print(f"Device with code: {device_code} - not found!")
+                print(f"Device {device_code} - not found!")
                 continue
             self.device = device
             break
@@ -73,7 +83,16 @@ class EmployeeUsageScript(DatabaseConnection):
 
     @staticmethod
     def print_usages(query, all_colums=False):
-        """Print usages."""
+        """
+        Print usages.
+
+        Args:
+            query (list): The query to print.
+            all_colums (bool): If True, all columns will be printed.
+
+        Returns:
+            None
+        """
         if not query:
             print("No usages found.")
             return
@@ -98,7 +117,7 @@ class EmployeeUsageScript(DatabaseConnection):
         """List all usage for an employee."""
         query = self.get_usages_with_device_info()
         if not query:
-            print(f"No usages found for employee {self.employee.code}")
+            print(f"No usages found for employee {self.employee}")
             return
         self.print_usages(query, all_colums=True)
 
@@ -106,7 +125,7 @@ class EmployeeUsageScript(DatabaseConnection):
         """List all check in for an employee."""
         query = self.get_usages_with_device_info(search_type='in')
         if not query:
-            print(f"No usages chek in found for employee {self.employee.code}")
+            print(f"No usages check in found for employee {self.employee}")
             return
         self.print_usages(query)
 
@@ -114,21 +133,30 @@ class EmployeeUsageScript(DatabaseConnection):
         """List all check out for an employee code."""
         query = self.get_usages_with_device_info(search_type='out')
         if not query:
-            print(f"No usages chek out found for employee {self.employee.code}")
+            print(f"No usages check out found for employee {self.employee}")
             return
         self.print_usages(query)
 
     def check_in_or_out(self, prefix, usage=None):
-        """Check in or out a device."""
+        """
+        Check in or Check out a device.
+
+        Args:
+            prefix (str = "checked in" | "checked out"): The prefix to print.
+            usage (Usage | None): The usage to update.
+
+        Returns:
+            None
+        """
         if prefix == "checked in":
             self.session.add(
-                Usage(employee_id=self.employee.id, device_id=self.device.id, type=UsageCheck.CHECK_IN)
+                Usage(employee_id=self.employee.id, device_id=self.device.id)
             )
         elif prefix == "checked out":
             usage.type = UsageCheck.CHECK_OUT
 
         self.session.commit()
-        print(f'Device with code "{self.device.code}" {prefix} for Employee with code "{self.employee.code}".')
+        print(f'Employee {self.employee} {prefix} device {self.device}.')
 
     def check_in(self):
         """Check in a device."""
@@ -136,19 +164,19 @@ class EmployeeUsageScript(DatabaseConnection):
 
         if self.session.query(Usage).filter(Usage.device_id == self.device.id,
                                             Usage.type == UsageCheck.CHECK_IN).first():
-            print(f"Device with code: {self.device.code} - already checked in!")
+            print(f"Device {self.device} - already checked in!")
             return
 
         self.check_in_or_out(prefix="checked in")
 
     def check_out(self):
-        """Check out a device."""
+        """Check out all device for Employee."""
         self.load_employee_and_device()
         usage = self.session.query(Usage).filter(Usage.device_id == self.device.id,
                                                  Usage.employee_id == self.employee.id,
                                                  Usage.type == UsageCheck.CHECK_IN).first()
         if usage is None:
-            print(f"Device with code: {self.device.code} - was check out!")
+            print(f"Employee {self.employee} has not checked in device {self.device}.")
             return
 
         self.check_in_or_out(prefix="checked out", usage=usage)
@@ -169,13 +197,13 @@ def run():
 
     with EmployeeUsageScript() as eus:
         if command not in eus.commands:
-            print(f"Invalid command: {command}")
+            print(f"Invalid command: {command}, valid commands: \n all | in | out | check_in [employee_code] | check_out [employee_code]")
             return
 
         if len(sys.argv) == 3:
             code = sys.argv[2]
             if not eus.load_employee(code):
-                print(f"Employee with code {code} not found!")
+                print(f"Employee {code} not found!")
                 return
 
         eus.commands[command]()

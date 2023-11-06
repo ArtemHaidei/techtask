@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy import Column, String, Enum, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
-from choiches import BrandType, DeviceType, UsageCheck
+from choices import BrandType, DeviceType, UsageCheck
 from settings import GUID
 
 Base = declarative_base()
@@ -23,7 +23,7 @@ class Employee(Base):
         return f"Code: {self.code}"
 
     def __str__(self):
-        return f"Code: {self.code}"
+        return f"<{self.code}>"
 
 
 class Device(Base):
@@ -40,7 +40,7 @@ class Device(Base):
         return f"Code: {self.code}"
 
     def __str__(self):
-        return f"Code: {self.code}"
+        return f"<{self.code}>"
 
 
 class Usage(Base):
@@ -48,11 +48,11 @@ class Usage(Base):
 
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     date = Column(DateTime, default=func.now())
-    employee_id = Column(GUID(), ForeignKey('employee.id'), nullable=False)
+    employee_id = Column(GUID(), ForeignKey('employee.id'), nullable=True)
     employee = relationship("Employee", back_populates="usages")
-    device_id = Column(GUID(), ForeignKey('device.id'), nullable=False)
+    device_id = Column(GUID(), ForeignKey('device.id', ondelete='CASCADE'))
     device = relationship("Device", back_populates="usages")
-    type = Column(Enum(UsageCheck), nullable=False, default=UsageCheck.CHECK_OUT)
+    type = Column(Enum(UsageCheck), nullable=False, default=UsageCheck.CHECK_IN)
 
     def __str__(self):
         return (f"Date: {self.date}"

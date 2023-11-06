@@ -11,7 +11,10 @@ tabluate_kwargs = {
     "stralign": "center"
 }
 
+
 class GUID(TypeDecorator):
+    """Platform-independent UUID type."""
+
     impl = CHAR
     cache_ok = True
 

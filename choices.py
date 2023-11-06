@@ -19,6 +19,8 @@ class UsageCheck(Enum):
 
 
 def get_type_by_name(name, enum_class):
+    """Get the enum type by name."""
+
     for device_type in enum_class:
         if name.lower() in (variant.lower() for variant in device_type.value):
             return device_type

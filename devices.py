@@ -1,14 +1,14 @@
 import sys
 from tabulate import tabulate
 from models import Device
-from db import DatabaseConnection
-from choiches import BrandType, DeviceType, get_type_by_name
+from db import DatabaseConnectionMixin
+from choices import BrandType, DeviceType, get_type_by_name
 from settings import tabluate_kwargs
 
 
-class DeviceScript(DatabaseConnection):
+class DeviceScript(DatabaseConnectionMixin):
     """
-        This class contains all the commands for managing devices.
+        This class contains all the commands for managing devices table.
     """
     def __init__(self):
         self.commands = {
@@ -22,7 +22,15 @@ class DeviceScript(DatabaseConnection):
         self.joined_device_choices = ", ".join([device.value[0] for device in DeviceType])
 
     def is_code_unique(self, code_to_check):
-        """Checks if the entered code is unique."""
+        """
+        Checks if the entered code is unique.
+
+        Args:
+            code_to_check (str): The code to check.
+
+        Returns:
+            bool: Returns True if the code is unique, otherwise False.
+        """
         return self.session.query(Device).filter(Device.code == code_to_check).first() is None
 
     def list_devices(self):
@@ -46,7 +54,7 @@ class DeviceScript(DatabaseConnection):
 
     def add_device(self):
         """Add a new device."""
-        description = input("Enter description: ").strip()
+        description = input("Enter description: ").strip().capitalize()
         check_brand, check_device = True, True
         brand, device, code = None, None, None
 
@@ -76,7 +84,7 @@ class DeviceScript(DatabaseConnection):
         new_device = Device(description=description, brand=brand, type=device, code=code)
         self.session.add(new_device)
         self.session.commit()
-        print(f"Device with code {code} added.")
+        print(f"Device {code} added.")
 
     def update_device(self):
         """Update an existing device."""
@@ -91,12 +99,13 @@ class DeviceScript(DatabaseConnection):
             print("Device not found!")
             return
 
-        device_inst.description = input(f"Enter new description: ") or device_inst.description
+        device_inst.description = input(f"Enter new description if you want to update "
+                                        f"or press Enter to skip: ").strip().capitalize() or device_inst.description
         check_brand, check_device = True, True
 
         while True:
             if check_brand:
-                input_brand = input(f"Enter follow new brand if you want to update ({self.joined_brand_choices}): ").strip().lower()
+                input_brand = input(f"Enter one of the following new brands if you want to update ({self.joined_brand_choices}) or press Enter to skip: ").strip().lower()
                 brand = get_type_by_name(name=input_brand, enum_class=BrandType)
                 if brand:
                     device_inst.brand = brand
@@ -106,7 +115,7 @@ class DeviceScript(DatabaseConnection):
                 check_brand = False
 
             if check_device:
-                input_device = input(f"Enter new device if you want to update ({self.joined_device_choices}): ").strip().lower()
+                input_device = input(f"Enter new device if you want to update ({self.joined_device_choices}) or press Enter to skip: ").strip().lower()
                 device = get_type_by_name(name=input_device, enum_class=DeviceType)
                 if device:
                     device_inst.type = device
@@ -124,7 +133,7 @@ class DeviceScript(DatabaseConnection):
             break
 
         self.session.commit()
-        print(f"Device with code {device_code} updated.")
+        print(f"Device {device_code} updated.")
 
     def delete_device(self):
         """Delete an existing device."""
@@ -136,10 +145,10 @@ class DeviceScript(DatabaseConnection):
             return
 
         confirm = input("Are you sure you want to delete this device? (yes/no): ").lower()
-        if confirm == 'yes':
+        if confirm in ['yes', 'y']:
             self.session.delete(device)
             self.session.commit()
-            print(f"Device with code {device_code} deleted.")
+            print(f"Device {device_code} deleted.")
         else:
             print("Deletion cancelled.")
 
@@ -151,13 +160,13 @@ def main():
     print("-" * slash + "\n")
 
     if len(sys.argv) < 2:
-        print("Usage: python devices.py list | add | update | delete")
+        print("Usage: python devices.py\nlist | add | update | delete")
         return
 
     command = sys.argv[1].lower()
     with DeviceScript() as es:
         if command not in es.commands:
-            print(f"Invalid command: {command}")
+            print(f"Invalid command: {command}. Valid commands:\nlist | add | update | delete")
             return
 
         es.commands[command]()
